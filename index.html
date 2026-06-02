@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT Diagnostic Simulations — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="manifest" href="site.webmanifest">
+<style>
+  :root {
+    --bg:        #0d1117;
+    --bg2:       #141b24;
+    --bg3:       #1a2433;
+    --blue:      #1a6fc4;
+    --blue-lt:   #3b92e8;
+    --cyan:      #00d4d8;
+    --orange:    #e8803a;
+    --green:     #39c96e;
+    --purple:    #8b5cf6;
+    --yellow:    #f5c842;
+    --text:      #e2eaf5;
+    --muted:     #7a92ab;
+    --border:    rgba(255,255,255,0.07);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Grid background ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,216,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,216,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── Glow blobs ── */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0.12;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .blob-1 { width: 600px; height: 600px; background: var(--blue); top: -200px; left: -150px; }
+  .blob-2 { width: 500px; height: 500px; background: var(--cyan); bottom: -150px; right: -100px; }
+
+  /* ── Header ── */
+  header {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 64px 24px 48px;
+  }
+
+  .eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--cyan);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.1s forwards;
+  }
+
+  h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(52px, 9vw, 96px);
+    font-weight: 800;
+    line-height: 0.92;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #ffffff 0%, var(--cyan) 60%, var(--blue-lt) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.2s forwards;
+  }
+
+  .subtitle {
+    margin-top: 20px;
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.6;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.35s forwards;
+  }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin: 32px auto 0;
+    padding: 0 24px;
+    opacity: 0;
+    animation: fadeUp 0.7s 0.45s forwards;
+  }
+  .stat { text-align: center; }
+  .stat-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--cyan);
+  }
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    max-width: 1100px;
+    margin: 40px auto 28px;
+    padding: 0 32px;
+    opacity: 0;
+    animation: fadeUp 0.6s 0.5s forwards;
+  }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  /* ── Grid ── */
+  .grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 80px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    opacity: 0;
+    animation: fadeUp 0.6s forwards;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px var(--accent);
+    border-color: var(--accent);
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 12px 12px 0 0;
+  }
+  /* Hover glow */
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at top, color-mix(in srgb, var(--accent) 8%, transparent), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .card:hover::after { opacity: 1; }
+
+  /* Accent colors */
+  .card[data-accent="cyan"]   { --accent: var(--cyan); }
+  .card[data-accent="blue"]   { --accent: var(--blue-lt); }
+  .card[data-accent="orange"] { --accent: var(--orange); }
+  .card[data-accent="green"]  { --accent: var(--green); }
+  .card[data-accent="purple"] { --accent: var(--purple); }
+  .card[data-accent="yellow"] { --accent: var(--yellow); }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .sim-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .sim-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+
+  .card-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #fff;
+    line-height: 1.1;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+    flex: 1;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: var(--bg3);
+    padding: 3px 9px;
+    border-radius: 4px;
+  }
+
+  .arrow {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 14px;
+    transition: transform 0.2s;
+  }
+  .card:hover .arrow { transform: translateX(3px); }
+
+  /* ── Footer ── */
+  footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 24px;
+    font-size: 14px;
+    color: var(--accent);
+    border-top: 1px solid var(--border);
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 1.px;
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Stagger cards */
+  .card:nth-child(1)  { animation-delay: 0.55s; }
+  .card:nth-child(2)  { animation-delay: 0.65s; }
+  .card:nth-child(3)  { animation-delay: 0.75s; }
+  .card:nth-child(4)  { animation-delay: 0.85s; }
+  .card:nth-child(5)  { animation-delay: 0.95s; }
+  .card:nth-child(6)  { animation-delay: 1.05s; }
+  .card:nth-child(7)  { animation-delay: 1.15s; }
+  .card:nth-child(8)  { animation-delay: 1.25s; }
+  .card:nth-child(9)  { animation-delay: 1.35s; }
+
+  @media (max-width: 600px) {
+    .grid { padding: 0 16px 60px; gap: 14px; }
+    .stats-bar { gap: 24px; }
+    h1 { font-size: 52px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<header>
+  <div class="eyebrow">IT Diagnostic Simulations · Interactive Learning Platform</div>
+  <h1>IT Diagnostic<br>Simulations</h1>
+  <p class="subtitle">Practice real-world IT troubleshooting scenarios. Select a simulation below to begin.</p>
+
+  <div class="stats-bar">
+    <div class="stat">
+      <div class="stat-num">9</div>
+      <div class="stat-label">Simulations</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">2</div>
+      <div class="stat-label">Categories</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">IT</div>
+      <div class="stat-label">Focused</div>
+    </div>
+  </div>
+</header>
+
+<div class="divider">
+  <div class="divider-line"></div>
+  <div class="divider-label">// Available Simulations</div>
+  <div class="divider-line"></div>
+</div>
+
+<main class="grid">
+
+  <a class="card" href="CEO_Tablet_Sim.html" data-accent="cyan">
+    <div class="card-top">
+      <div class="sim-icon">📱</div>
+      <span class="sim-badge">Sim 01</span>
+    </div>
+    <div class="card-title">Mobile Device Configuration</div>
+    <div class="card-desc">A CEO cannot connect her new consumer tablet to the wireless network. Diagnose and resolve the issue without changing home WiFi settings.</div>
+    <div class="card-footer">
+      <span class="tag">Networking</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="Helpdesk_Ticket_Sims_Updated.html" data-accent="blue">
+    <div class="card-top">
+      <div class="sim-icon">🎫</div>
+      <span class="sim-badge">Sim 02</span>
+    </div>
+    <div class="card-title">Help Desk Ticketing System</div>
+    <div class="card-desc">It's your first day at Fictional Company, LLC. Work through a queue of real help desk tickets and resolve each issue correctly.</div>
+    <div class="card-footer">
+      <span class="tag">Support</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="Network_Host_Quarantine_Sim_V2.html" data-accent="orange">
+    <div class="card-top">
+      <div class="sim-icon">🔒</div>
+      <span class="sim-badge">Sim 03</span>
+    </div>
+    <div class="card-title">Network Host Quarantine</div>
+    <div class="card-desc">A host on the network has been flagged for suspicious activity. Identify the threat and execute the correct quarantine procedure.</div>
+    <div class="card-footer">
+      <span class="tag">Security</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="BSOD_Command_Line_Sim.html" data-accent="purple">
+    <div class="card-top">
+      <div class="sim-icon">💻</div>
+      <span class="sim-badge">Sim 04</span>
+    </div>
+    <div class="card-title">Command Line Troubleshooting</div>
+    <div class="card-desc">After a software deployment, a user can no longer run the Testing program. Use CLI tools to diagnose and fix the issue.</div>
+    <div class="card-footer">
+      <span class="tag">OS / CLI</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="WHOAMI_Sim.html" data-accent="green">
+    <div class="card-top">
+      <div class="sim-icon">🖥️</div>
+      <span class="sim-badge">Sim 05</span>
+    </div>
+    <div class="card-title">Workstation Identification</div>
+    <div class="card-desc">Identify key workstation properties using system commands. Fill in the correct fields based on command-line output.</div>
+    <div class="card-footer">
+      <span class="tag">OS / CLI</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="Phishing_Email_Sim.html" data-accent="yellow">
+    <div class="card-top">
+      <div class="sim-icon">📧</div>
+      <span class="sim-badge">Sim 06</span>
+    </div>
+    <div class="card-title">Email Classification</div>
+    <div class="card-desc">Review a series of emails in a simulated inbox and correctly classify each as legitimate or a phishing attempt.</div>
+    <div class="card-footer">
+      <span class="tag">Security</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="Chat_Support_IMAP_Sim.html" data-accent="cyan">
+    <div class="card-top">
+      <div class="sim-icon">💬</div>
+      <span class="sim-badge">Sim 07</span>
+    </div>
+    <div class="card-title">Chat Support — IMAP Setup</div>
+    <div class="card-desc">Walk a customer through configuring their IMAP email client via live chat. Select the correct responses at each step.</div>
+    <div class="card-footer">
+      <span class="tag">Networking</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="Screened_Subnet_Sim.html" data-accent="orange">
+    <div class="card-top">
+      <div class="sim-icon">🌐</div>
+      <span class="sim-badge">Sim 08</span>
+    </div>
+    <div class="card-title">Screened Subnet Configuration</div>
+    <div class="card-desc">Configure a home network for a customer needing remote PC access and full game console functionality using a screened subnet layout.</div>
+    <div class="card-footer">
+      <span class="tag">Networking</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="SoHo_Router_Chat_Sim_V2.html" data-accent="blue">
+    <div class="card-top">
+      <div class="sim-icon">📡</div>
+      <span class="sim-badge">Sim 09</span>
+    </div>
+    <div class="card-title">SOHO Router Setup</div>
+    <div class="card-desc">Guide a user through replacing and securing a SOHO router via live chat. Configure credentials and apply security best practices.</div>
+    <div class="card-footer">
+      <span class="tag">Networking</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+</main>
+
+<footer >
+  ® K &amp; J <span id="currentYear"></span>
+</footer>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("currentYear").textContent = new Date().getFullYear();
+});</script>
+</body>
+</html>

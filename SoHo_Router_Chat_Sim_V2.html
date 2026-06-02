@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=2.0">
+<title>Simulation 9: SOHO Router Setup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding: 24px 16px; background: #f0f4f8; }
+  #app { font-family: Arial, sans-serif; width: 100%; max-width: 680px; }
+
+  /* ── Scenario box ── */
+  #scenario-box {
+    background: #ffffff;
+    border-left: 5px solid #1a6fc4;
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .scenario-badge {
+    display: inline-block;
+    background: #1a6fc4;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 10px;
+  }
+  #scenario-box h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a3a5c;
+    margin-bottom: 8px;
+  }
+  #scenario-box p { font-size: 13px; color: #333; line-height: 1.65; }
+
+  /* ── Instructions box ── */
+  #instructions-box {
+    background: #eef5fd;
+    border: 1px solid #c3d9f5;
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  }
+  #instructions-box h3 {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #1a6fc4;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #instructions-box h3::before {
+    content: "ℹ";
+    font-style: normal;
+    font-size: 14px;
+  }
+  #instructions-box ol { padding-left: 20px; }
+  #instructions-box li {
+    font-size: 13px;
+    color: #1a3a5c;
+    line-height: 1.75;
+    padding-left: 4px;
+  }
+  #instructions-box li::marker { color: #1a6fc4; font-weight: 700; }
+  #chat-wrap { background: #f5f5f5; border-radius: 10px; overflow: hidden; border: 1px solid #ddd; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  #titlebar { background: #1a6fc4; color: white; text-align: center; padding: 10px; font-size: 15px; font-weight: 500; letter-spacing: 0.5px; }
+  #chat-header { display: flex; align-items: center; padding: 8px 12px; border-bottom: 1px solid #ddd; background: #fff; font-size: 13px; color: #666; gap: 8px; }
+  #chat-header .hav { width: 28px; height: 28px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #555; flex-shrink: 0; }
+  #messages { background: #d8e8f5; padding: 12px; min-height: 300px; display: flex; flex-direction: column; gap: 10px; }
+  .msg-row { display: flex; gap: 8px; align-items: flex-start; }
+  .msg-row.right { flex-direction: row-reverse; }
+  .bav { width: 28px; height: 28px; border-radius: 50%; background: #b0b0b0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: white; flex-shrink: 0; margin-top: 2px; }
+  .bav.tech { background: #1a6fc4; }
+  .bubble { max-width: 72%; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; white-space: pre-line; }
+  .bubble.user { background: white; color: #222; border-radius: 12px 12px 12px 3px; }
+  .bubble.tech { background: #1a6fc4; color: white; border-radius: 12px 12px 3px 12px; }
+  #reply-area { background: #fff; border-top: 1px solid #ddd; padding: 10px 12px; }
+  #reply-label { font-size: 12px; color: #666; margin-bottom: 6px; }
+  #reply-select { width: 100%; padding: 7px 10px; font-size: 13px; border: 1px solid #ccc; border-radius: 6px; background: #fff; color: #222; margin-bottom: 8px; }
+  #send-btn { background: #1a6fc4; color: white; border: none; border-radius: 6px; padding: 7px 22px; font-size: 13px; cursor: pointer; float: right; }
+  #send-btn:disabled { opacity: 0.4; cursor: default; }
+  #send-btn:hover:not(:disabled) { background: #155da0; }
+  #reset-btn { background: none; border: 1px solid #ccc; border-radius: 6px; padding: 7px 14px; font-size: 12px; cursor: pointer; color: #666; }
+  #reset-btn:hover { background: #f5f5f5; }
+  .ctrls { display: flex; justify-content: space-between; align-items: center; clear: both; padding-top: 8px; }
+  .cf::after { content: ''; display: block; clear: both; }
+</style>
+</head>
+<body>
+<h2 class="sr-only" style="position:absolute;left:-9999px">SOHO Router Setup — Customer Support Chat Simulation</h2>
+<div id="app">
+
+  <div id="scenario-box">
+    <span class="scenario-badge">2 &nbsp;·&nbsp; Simulation</span>
+    <h2>SOHO Router Setup — Customer Support Chat</h2>
+    <p>You have been contacted through the help desk chat application. A user is setting up a replacement SOHO router. Assist the user with setting up the router.</p>
+  </div>
+
+  <div id="instructions-box">
+    <h3>Instructions</h3>
+    <ol>
+      <li>Select the most appropriate statement for each response.</li>
+      <li>Click the <strong>Send</strong> button after each response to continue the chat.</li>
+      <li>If at any time you would like to bring back the initial state of the simulation, please click the <strong>Reset All</strong> button.</li>
+    </ol>
+  </div>
+
+  <div id="chat-wrap">
+    <div id="titlebar">Help Desk Chat</div>
+    <div id="chat-header">
+      <div class="hav">🖥</div>
+      <span><strong style="color:var(--color-text-primary)">To: Customer</strong></span>
+    </div>
+    <div id="messages"></div>
+    <div id="reply-area">
+      <div id="reply-label">Select reply</div>
+      <select id="reply-select"><option value="">Select reply</option></select>
+      <div class="cf">
+        <button id="send-btn" onclick="sendReply()">Send ▶</button>
+      </div>
+      <div class="ctrls">
+        <button id="reset-btn" onclick="resetAll()">↺ Reset All</button>
+        <span id="step-indicator" style="font-size:12px;color:#666">Step 1 of 5</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+const flow = [
+  {
+    customerMsg: "I just received a new router for the office, and I need help setting it up.",
+    options: ["I am happy to assist you today.", "Have you tried using the FAQ?"],
+    correct: "I am happy to assist you today.",
+    wrongFeedback: "Start with a warm, professional greeting."
+  },
+  {
+    customerMsg: "I need to set up my basic security settings.",
+    options: ["Is this the first router in your office?", "Do you have the router manual?", "Please call your ISP for help."],
+    correct: "Is this the first router in your office?",
+    wrongFeedback: "Gather context — ask if it's a new or replacement router."
+  },
+  {
+    customerMsg: "No, it is a replacement. The last router broke.\nI am currently logged in and connected to the router's web page.",
+    options: [
+      "The first thing you need to do is change the default password.",
+      "Type the password printed on the label on the bottom of the router.",
+      "Use Summer21 as the administrative password so we can assist you in the future.",
+      "Leave the password field blank for easy access in the future."
+    ],
+    correct: "The first thing you need to do is change the default password.",
+    wrongFeedback: "Security best practice: always change the default password first."
+  },
+  {
+    customerMsg: "Okay, I am ready to set a new password.",
+    options: [
+      "Create a new password with an uppercase, a lowercase, and a special character.",
+      "Use Summer21 as the administrative password.",
+      "Type the password printed on the label on the bottom of the router.",
+      "Leave the password field blank for easy access in the future."
+    ],
+    correct: "Create a new password with an uppercase, a lowercase, and a special character.",
+    wrongFeedback: "Give proper password complexity guidance."
+  },
+  {
+    customerMsg: "That is complete now, and the router is asking to reboot. Should I reboot to move on?",
+    options: ["Yes, reboot please.", "If you think you should, you can.", "No, it is not necessary."],
+    correct: "Yes, reboot please.",
+    wrongFeedback: "Rebooting applies new settings — always confirm the reboot."
+  }
+];
+
+let step = 0;
+
+function addMsg(text, side) {
+  const row = document.createElement('div');
+  row.className = 'msg-row' + (side === 'tech' ? ' right' : '');
+  const av = document.createElement('div');
+  av.className = 'bav' + (side === 'tech' ? ' tech' : '');
+  av.textContent = side === 'tech' ? 'IT' : 'C';
+  const bub = document.createElement('div');
+  bub.className = 'bubble ' + side;
+  bub.textContent = text;
+  if (side === 'tech') { row.appendChild(bub); row.appendChild(av); }
+  else { row.appendChild(av); row.appendChild(bub); }
+  document.getElementById('messages').appendChild(row);
+  row.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+
+function addFeedback(ok, msg) {
+  const el = document.createElement('div');
+  el.style.cssText = 'text-align:center;font-size:12px;padding:4px 10px;border-radius:var(--border-radius-md);margin:0 auto;max-width:90%;' +
+    (ok ? 'background:#eaf3de;color:#3b6d11;' : 'background:#fcebeb;color:#a32d2d;');
+  el.textContent = ok ? '✓ Correct!' : '✗ ' + msg;
+  document.getElementById('messages').appendChild(el);
+  el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+
+function populateSelect() {
+  const sel = document.getElementById('reply-select');
+  sel.innerHTML = '<option value="">Select reply</option>';
+  if (step < flow.length) {
+    flow[step].options.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt; o.textContent = opt;
+      sel.appendChild(o);
+    });
+  }
+  sel.value = '';
+  document.getElementById('send-btn').disabled = false;
+}
+
+function sendReply() {
+  const sel = document.getElementById('reply-select');
+  const chosen = sel.value;
+  if (!chosen) return;
+  addMsg(chosen, 'tech');
+  const ok = chosen === flow[step].correct;
+  addFeedback(ok, flow[step].wrongFeedback);
+  if (ok) {
+    step++;
+    if (step < flow.length) {
+      setTimeout(() => {
+        addMsg(flow[step].customerMsg, 'user');
+        populateSelect();
+        document.getElementById('step-indicator').textContent = 'Step ' + (step + 1) + ' of ' + flow.length;
+      }, 700);
+    } else {
+      document.getElementById('reply-select').innerHTML = '';
+      document.getElementById('send-btn').disabled = true;
+      document.getElementById('step-indicator').textContent = 'Complete!';
+      setTimeout(() => {
+        const d = document.createElement('div');
+        d.style.cssText = 'text-align:center;padding:10px;font-size:13px;color:#3b6d11;background:#eaf3de;border-radius:var(--border-radius-md);margin:6px;';
+        d.textContent = '✓ Router setup complete! All responses correct.';
+        document.getElementById('messages').appendChild(d);
+        d.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 500);
+    }
+  } else {
+    setTimeout(populateSelect, 500);
+  }
+}
+
+function resetAll() {
+  step = 0;
+  document.getElementById('messages').innerHTML = '';
+  document.getElementById('step-indicator').textContent = 'Step 1 of 5';
+  addMsg(flow[0].customerMsg, 'user');
+  populateSelect();
+}
+
+resetAll();
+</script>
+</body>
+</html>

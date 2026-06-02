@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workstation Identification Sim</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+  :root {
+    --bg: #0a0e14;
+    --panel: #0f1520;
+    --border: #1e3a5f;
+    --accent: #00d4ff;
+    --accent2: #00ff9d;
+    --warn: #ff6b35;
+    --text: #c8d8e8;
+    --dim: #4a6080;
+    --glow: 0 0 10px rgba(0,212,255,0.4);
+    --green-glow: 0 0 10px rgba(0,255,157,0.4);
+    --monitor-bg: #060b10;
+    --terminal-bg: #050d14;
+    --success: #00ff9d;
+    --error: #ff4444;
+  }
+
+  body.light {
+    --bg: #eaf1f8;
+    --panel: #ffffff;
+    --border: #93bcd9;
+    --accent: #0077aa;
+    --accent2: #007a50;
+    --warn: #d04a00;
+    --text: #1a2a3a;
+    --dim: #6a8aaa;
+    --glow: 0 0 10px rgba(0,119,170,0.3);
+    --green-glow: 0 0 10px rgba(0,122,80,0.3);
+    --monitor-bg: #d0e4f0;
+    --terminal-bg: #f5faff;
+    --success: #007a50;
+    --error: #cc2222;
+  }
+
+  body.light {
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(0,100,180,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(0,150,100,0.06) 0%, transparent 50%),
+      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,119,170,0.03) 40px, rgba(0,119,170,0.03) 41px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,119,170,0.03) 40px, rgba(0,119,170,0.03) 41px);
+  }
+
+  /* === THEME TOGGLE === */
+  .header-controls {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+  }
+
+  .theme-toggle {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+  .reset-btn {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .reset-btn:hover { border-color: var(--warn); color: var(--warn); }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Share Tech Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(0,50,100,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(0,100,80,0.1) 0%, transparent 50%),
+      repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(0,212,255,0.02) 40px, rgba(0,212,255,0.02) 41px),
+      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,212,255,0.02) 40px, rgba(0,212,255,0.02) 41px);
+  }
+
+  header {
+    text-align: center;
+    padding: 2rem 1rem 1rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    box-shadow: var(--glow);
+  }
+
+  header h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.2rem, 3vw, 2rem);
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    text-shadow: var(--glow);
+  }
+
+  header p {
+    margin-top: 0.6rem;
+    color: var(--secondary);
+    font-size: 0.8rem;
+Font-weight: 900;
+    letter-spacing: 0.1em;
+  }
+
+  .lab {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    flex-wrap: wrap;
+    padding: 3rem 2rem 2rem;
+  }
+
+  /* === WORKSTATION === */
+  .workstation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+    position: relative;
+  }
+
+  .workstation:hover { transform: translateY(-4px); }
+
+  .workstation-label {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--dim);
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+  }
+
+  .monitor {
+    width: 160px;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 10px;
+    position: relative;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .workstation:hover .monitor,
+  .workstation.active .monitor {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(0,212,255,0.25), inset 0 0 20px rgba(0,212,255,0.05);
+  }
+
+  .screen {
+    width: 100%;
+    height: 90px;
+    background: var(--monitor-bg);
+    border-radius: 4px;
+    border: 1px solid #0d2035;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .screen-content {
+    font-size: 0.45rem;
+    color: var(--accent);
+    opacity: 0.7;
+    text-align: left;
+    padding: 4px;
+    line-height: 1.5;
+  }
+
+  .screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px);
+    pointer-events: none;
+  }
+
+  .monitor-base {
+    width: 40px;
+    height: 12px;
+    background: var(--panel);
+    margin: 0 auto;
+    border-radius: 0 0 4px 4px;
+    border: 1px solid var(--border);
+    border-top: none;
+  }
+
+  .monitor-stand {
+    width: 60px;
+    height: 6px;
+    background: var(--panel);
+    margin: 0 auto;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+
+  .click-hint {
+    font-size: 0.6rem;
+    color: var(--dim);
+    margin-top: 0.5rem;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .workstation:hover .click-hint { opacity: 1; color: var(--accent); }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--dim);
+    position: absolute;
+    bottom: 8px; right: 8px;
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  .workstation.active .status-dot {
+    background: var(--accent2);
+    box-shadow: 0 0 6px var(--accent2);
+    animation: blink 1.5s infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* === TERMINAL MODAL === */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(3px);
+  }
+  .modal-overlay.open { display: flex; }
+
+  .terminal {
+    width: min(680px, 95vw);
+    background: var(--terminal-bg);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    box-shadow: 0 0 40px rgba(0,212,255,0.3), 0 20px 60px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    animation: termOpen 0.2s ease-out;
+  }
+
+  @keyframes termOpen {
+    from { transform: scale(0.92) translateY(10px); opacity: 0; }
+    to   { transform: scale(1)    translateY(0);    opacity: 1; }
+  }
+
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    border-radius: 8px 8px 0 0;
+  }
+
+  .t-btn {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+  }
+  .t-close { background: #ff5f57; }
+  .t-close:hover { background: #ff3b30; }
+  .t-min   { background: #febc2e; }
+  .t-max   { background: #28c840; }
+
+  .terminal-title {
+    flex: 1;
+    text-align: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--dim);
+  }
+
+  .terminal-output {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    font-size: 0.82rem;
+    line-height: 1.7;
+    min-height: 260px;
+    max-height: 340px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .terminal-output::-webkit-scrollbar { width: 4px; }
+  .terminal-output::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .line-cmd  { color: var(--accent); }
+  .line-out  { color: var(--text); }
+  .line-dim  { color: var(--dim); }
+  .line-err  { color: var(--error); }
+  .line-good { color: var(--accent2); }
+
+  .prompt-row {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 1rem 0.8rem;
+    border-top: 1px solid var(--border);
+    gap: 0.5rem;
+  }
+
+  .prompt-label {
+    color: var(--accent2);
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  .prompt-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--accent);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.82rem;
+    caret-color: var(--accent);
+  }
+
+  /* === ANSWER SECTION === */
+  .answer-section {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .answer-section h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    color: var(--secondary);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .answer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .answer-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1.2rem;
+    transition: border-color 0.3s;
+  }
+
+  .answer-card.complete {
+    border-color: var(--accent2);
+    box-shadow: 0 0 12px rgba(0,255,157,0.15);
+  }
+
+  .answer-card h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+
+  .field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.7rem;
+    gap: 0.5rem;
+  }
+
+  .field-label {
+    font-size: 0.72rem;
+    color: var(--dim);
+    letter-spacing: 0.05em;
+    min-width: 65px;
+  }
+
+  .field-select {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    padding: 4px 8px;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a6080'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    padding-right: 22px;
+  }
+
+  .field-select:focus { border-color: var(--accent); }
+  .field-select option { background: #0a0e14; }
+
+  .field-select.correct { border-color: var(--accent2); color: var(--accent2); }
+  .field-select.incorrect { border-color: var(--error); color: var(--error); }
+
+  /* === CHECK BUTTON === */
+  .check-area {
+    text-align: center;
+    padding: 1.5rem 2rem 2.5rem;
+  }
+
+  .check-btn {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 0.7rem 2.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .check-btn:hover {
+    background: rgba(0,212,255,0.1);
+    box-shadow: var(--glow);
+  }
+
+  .result-msg {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    min-height: 1.2rem;
+    letter-spacing: 0.05em;
+  }
+  .result-msg.win { color: var(--accent2); text-shadow: var(--green-glow); }
+  .result-msg.fail { color: var(--warn); }
+
+  /* scrollbar */
+  * { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+</style>
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor msdt:dt="string">Kevin Andiappen</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Editor>
+<mso:Order msdt:dt="string">168200.000000000</mso:Order>
+<mso:_ExtendedDescription msdt:dt="string"></mso:_ExtendedDescription>
+<mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author msdt:dt="string">Kevin Andiappen</mso:display_urn_x003a_schemas-microsoft-com_x003a_office_x003a_office_x0023_Author>
+<mso:ComplianceAssetId msdt:dt="string"></mso:ComplianceAssetId>
+<mso:TriggerFlowInfo msdt:dt="string"></mso:TriggerFlowInfo>
+<mso:ContentTypeId msdt:dt="string">0x010100E61ED882FF9C6849B720224E9FDF0B04</mso:ContentTypeId>
+<mso:_SourceUrl msdt:dt="string"></mso:_SourceUrl>
+<mso:_SharedFileIndex msdt:dt="string"></mso:_SharedFileIndex>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+<body>
+
+<header>
+  <h1>Workstation Identification</h1>
+  <p style="font-weight: bold;">Instructions: Click each workstation to open its terminal &nbsp;|&nbsp; Use the commands to discover the requested network info for each computer</p>
+  <div class="header-controls">
+    <button class="reset-btn" onclick="resetSim()">↺ Reset</button>
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">☀ Light</button>
+  </div>
+</header>
+
+<!-- ===================== WORKSTATIONS ===================== -->
+<div class="lab">
+  <div class="workstation" id="ws1" onclick="openTerminal(1)">
+    <div class="workstation-label">Workstation 1</div>
+    <div class="monitor">
+      <div class="screen">
+        <div class="screen-content">C:\&gt;_<br>&nbsp;<br>READY</div>
+      </div>
+      <div class="status-dot"></div>
+    </div>
+    <div class="monitor-base"></div>
+    <div class="monitor-stand"></div>
+    <div class="click-hint">[ CLICK TO CONNECT ]</div>
+  </div>
+
+  <div class="workstation" id="ws2" onclick="openTerminal(2)">
+    <div class="workstation-label">Workstation 2</div>
+    <div class="monitor">
+      <div class="screen">
+        <div class="screen-content">C:\&gt;_<br>&nbsp;<br>READY</div>
+      </div>
+      <div class="status-dot"></div>
+    </div>
+    <div class="monitor-base"></div>
+    <div class="monitor-stand"></div>
+    <div class="click-hint">[ CLICK TO CONNECT ]</div>
+  </div>
+
+  <div class="workstation" id="ws3" onclick="openTerminal(3)">
+    <div class="workstation-label">Workstation 3</div>
+    <div class="monitor">
+      <div class="screen">
+        <div class="screen-content">C:\&gt;_<br>&nbsp;<br>READY</div>
+      </div>
+      <div class="status-dot"></div>
+    </div>
+    <div class="monitor-base"></div>
+    <div class="monitor-stand"></div>
+    <div class="click-hint">[ CLICK TO CONNECT ]</div>
+  </div>
+</div>
+
+<!-- ===================== TERMINAL MODAL ===================== -->
+<div class="modal-overlay" id="modal" onclick="closeOnOverlay(event)">
+  <div class="terminal">
+    <div class="terminal-bar">
+      <button class="t-btn t-close" onclick="closeTerminal()"></button>
+      <button class="t-btn t-min"></button>
+      <button class="t-btn t-max"></button>
+      <div class="terminal-title" id="terminal-title">WORKSTATION 1 — COMMAND PROMPT</div>
+    </div>
+    <div class="terminal-output" id="terminal-output"></div>
+    <div class="prompt-row">
+      <span class="prompt-label" id="prompt-label">C:\&gt;</span>
+      <input class="prompt-input" id="prompt-input" type="text"
+        placeholder="type a command..." autocomplete="off" spellcheck="false"
+        onkeydown="handleKey(event)">
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ANSWER SECTION ===================== -->
+<div class="answer-section">
+  <h2>▸ Workstation Identification — Fill in the fields</h2>
+  <div class="answer-grid" id="answer-grid">
+    <!-- injected by JS -->
+  </div>
+</div>
+
+<div class="check-area">
+  <button class="check-btn" onclick="checkAnswers()">Verify Answers</button>
+  <div class="result-msg" id="result-msg"></div>
+</div>
+
+<script>
+// ===================== DATA =====================
+const DATA = {
+  1: {
+    hostname: "NPOWER-PC-007",
+    domain:   "NPower",
+    ip:       "192.168.1.101",
+    gpo:      "Default Workstation Policy"
+  },
+  2: {
+    hostname: "K2-PC-042",
+    domain:   "K2",
+    ip:       "192.168.1.102",
+    gpo:      "IT Department Policy"
+  },
+  3: {
+    hostname: "SKYNET-PC-099",
+    domain:   "SkyNet",
+    ip:       "192.168.1.103",
+    gpo:      "Security Hardening Policy"
+  }
+};
+
+// All possible options per field (correct + distractors)
+const OPTIONS = {
+  hostname: ["NPOWER-PC-007", "K2-PC-042", "SKYNET-PC-099"],
+  domain:   ["NPower", "K2", "SkyNet"],
+  ip:       ["192.168.1.101", "192.168.1.102", "192.168.1.103"],
+  gpo:      ["Default Workstation Policy", "IT Department Policy", "Security Hardening Policy"]
+};
+
+// ===================== TERMINAL STATE =====================
+let currentWS = null;
+const history = { 1: [], 2: [], 3: [] };
+
+function openTerminal(n) {
+  currentWS = n;
+  document.getElementById('terminal-title').textContent = `WORKSTATION ${n} — COMMAND PROMPT`;
+  document.getElementById('prompt-label').textContent = `C:\\WS${n}>`;
+  const out = document.getElementById('terminal-output');
+  if (history[n].length === 0) {
+    // boot message
+    history[n].push(
+      `<div class="line-dim">Microsoft Windows [Version 10.0.19045]</div>`,
+      `<div class="line-dim">(c) Microsoft Corporation. All rights reserved.</div>`,
+      `<div class="line-dim">&nbsp;</div>`,
+      `<div class="line-dim">Type <span class="line-cmd">help</span> for available commands.</div>`,
+      `<div class="line-dim">&nbsp;</div>`
+    );
+  }
+  out.innerHTML = history[n].join('');
+  out.scrollTop = out.scrollHeight;
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('prompt-input').value = '';
+  document.getElementById('prompt-input').focus();
+  document.getElementById(`ws${n}`).classList.add('active');
+}
+
+function closeTerminal() {
+  document.getElementById('modal').classList.remove('open');
+  currentWS = null;
+}
+
+function closeOnOverlay(e) {
+  if (e.target === document.getElementById('modal')) closeTerminal();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter') runCommand(e.target.value.trim());
+}
+
+function runCommand(cmd) {
+  if (!currentWS || !cmd) return;
+  const n = currentWS;
+  const d = DATA[n];
+  const lower = cmd.toLowerCase().replace(/\s+/g,' ').trim();
+  const out = document.getElementById('terminal-output');
+
+  // echo the command
+  history[n].push(`<div class="line-cmd">C:\\WS${n}> ${escHtml(cmd)}</div>`);
+
+  let response = [];
+
+  if (lower === 'help') {
+    response = [
+      `<div class="line-out">&nbsp;</div>`,
+      `<div class="line-out">Available commands:</div>`,
+      `<div class="line-out">&nbsp;</div>`,
+      `<div class="line-good">  whoami     </div><div class="line-dim"> — Shows domain\\hostname</div>`,
+      `<div class="line-good">  ipconfig   </div><div class="line-dim"> — Shows network configuration (IPv4)</div>`,
+      `<div class="line-good">  gpresult /r</div><div class="line-dim"> — Shows applied Group Policy Objects</div>`,
+      `<div class="line-out">&nbsp;</div>`,
+    ];
+  } else if (lower === 'whoami') {
+    response = [
+      `<div class="line-out">&nbsp;</div>`,
+      `<div class="line-good">${d.domain}\\${d.hostname}</div>`,
+      `<div class="line-out">&nbsp;</div>`,
+    ];
+  } else if (lower === 'ipconfig') {
+    response = [
+      `<div class="line-out">&nbsp;</div>`,
+      `<div class="line-out">Windows IP Configuration</div>`,
+      `<div class="line-out">&nbsp;</div>`,
+      `<div class="line-out">Ethernet adapter Local Area Connection:</div>`,
+      `<div class="line-out">&nbsp;</div>`,
+      `<div class="line-out">   Connection-specific DNS Suffix . :</div>`,
+      `<div class="line-out">   IPv4 Address. . . . . . . . . . . : <span class="line-good">${d.ip}</span></div>`,
+      `<div class="line-out">   Subnet Mask . . . . . . . . . . . : 255.255.255.0</div>`,
+      `<div class="line-out">   Default Gateway . . . . . . . . . : 192.168.1.1</div>`,
+      `<div class="line-out">&nbsp;</div>`,
+    ];
+  } else if (lower === 'gpresult /r') {
+    response = [
+      `<div class="line-out">&nbsp;</div>`,
+      `<div class="line-out">Microsoft (R) Windows (R) Operating System Group Policy Result tool</div>`,
+      `<div class="line-out">&nbsp;</div>`,
+      `<div class="line-out">RSOP data for ${d.domain}\\${d.hostname}</div>`,
+      `<div class="line-out">&nbsp;</div>`,
+      `<div class="line-out">COMPUTER SETTINGS</div>`,
+      `<div class="line-out">-----------------</div>`,
+      `<div class="line-out">    Last time Group Policy was applied: ${new Date().toLocaleString()}</div>`,
+      `<div class="line-out">    Applied Group Policy Objects</div>`,
+      `<div class="line-out">    --------------------------------</div>`,
+      `<div class="line-good">        ${d.gpo}</div>`,
+      `<div class="line-out">&nbsp;</div>`,
+      `<div class="line-out">USER SETTINGS</div>`,
+      `<div class="line-out">-------------</div>`,
+      `<div class="line-out">    Applied Group Policy Objects</div>`,
+      `<div class="line-out">    --------------------------------</div>`,
+      `<div class="line-good">        ${d.gpo}</div>`,
+      `<div class="line-out">&nbsp;</div>`,
+    ];
+  } else {
+    response = [
+      `<div class="line-err">'${escHtml(cmd)}' is not recognized as an internal or external command.</div>`,
+      `<div class="line-dim">Type <span class="line-cmd">help</span> to see available commands.</div>`,
+      `<div class="line-out">&nbsp;</div>`,
+    ];
+  }
+
+  history[n].push(...response);
+  out.innerHTML = history[n].join('');
+  out.scrollTop = out.scrollHeight;
+  document.getElementById('prompt-input').value = '';
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ===================== ANSWER DROPDOWNS =====================
+const FIELDS = ['hostname','domain','ip','gpo'];
+const LABELS = { hostname: 'Hostname', domain: 'Domain', ip: 'IP Address', gpo: 'GPO' };
+
+function buildDropdowns() {
+  const grid = document.getElementById('answer-grid');
+  grid.innerHTML = '';
+  [1,2,3].forEach(n => {
+    const card = document.createElement('div');
+    card.className = 'answer-card';
+    card.id = `card${n}`;
+    card.innerHTML = `<h3>Workstation ${n}</h3>`;
+    FIELDS.forEach(f => {
+      const row = document.createElement('div');
+      row.className = 'field-row';
+      const lbl = document.createElement('div');
+      lbl.className = 'field-label';
+      lbl.textContent = LABELS[f];
+      const sel = document.createElement('select');
+      sel.className = 'field-select';
+      sel.id = `sel_${n}_${f}`;
+      sel.innerHTML = `<option value="">-- select --</option>`;
+      OPTIONS[f].forEach(o => {
+        sel.innerHTML += `<option value="${o}">${o}</option>`;
+      });
+      row.appendChild(lbl);
+      row.appendChild(sel);
+      card.appendChild(row);
+    });
+    grid.appendChild(card);
+  });
+}
+
+function checkAnswers() {
+  let allCorrect = true;
+  [1,2,3].forEach(n => {
+    const d = DATA[n];
+    let cardOk = true;
+    FIELDS.forEach(f => {
+      const sel = document.getElementById(`sel_${n}_${f}`);
+      const correct = String(d[f]);
+      const chosen = sel.value;
+      sel.classList.remove('correct','incorrect');
+      if (!chosen) {
+        sel.classList.add('incorrect');
+        cardOk = false; allCorrect = false;
+      } else if (chosen === correct) {
+        sel.classList.add('correct');
+      } else {
+        sel.classList.add('incorrect');
+        cardOk = false; allCorrect = false;
+      }
+    });
+    const card = document.getElementById(`card${n}`);
+    card.classList.toggle('complete', cardOk);
+  });
+  const msg = document.getElementById('result-msg');
+  if (allCorrect) {
+    msg.className = 'result-msg win';
+    msg.textContent = '✔  All workstations identified correctly. Lab complete!';
+  } else {
+    msg.className = 'result-msg fail';
+    msg.textContent = '✘  Some answers are incorrect. Review the terminal output and try again.';
+  }
+}
+
+// ===================== THEME TOGGLE =====================
+function toggleTheme() {
+  const body = document.body;
+  const btn = document.getElementById('theme-toggle');
+  body.classList.toggle('light');
+  if (body.classList.contains('light')) {
+    btn.textContent = '🌙 Dark';
+  } else {
+    btn.textContent = '☀ Light';
+  }
+}
+
+// ===================== RESET =====================
+function resetSim() {
+  // Clear terminal histories
+  [1,2,3].forEach(n => {
+    history[n] = [];
+    document.getElementById(`ws${n}`).classList.remove('active');
+  });
+  // Close terminal if open
+  closeTerminal();
+  // Rebuild dropdowns (clears values + correct/incorrect classes)
+  buildDropdowns();
+  // Clear result message
+  const msg = document.getElementById('result-msg');
+  msg.className = 'result-msg';
+  msg.textContent = '';
+}
+
+// ===================== INIT =====================
+buildDropdowns();
+</script>
+</body>
+</html>
